@@ -1,12 +1,19 @@
-class accountdata {
+class AccountData {
+  String email;
+  String password;
+  String username;
 
-  // Data akun awal.
-  // Ini bisa digunakan untuk mencoba login
-  // sebelum membuat akun baru.
-
-  static String username = 'Cloudbreadfz';
-
-  static String email = 'cloudbreadfz@gmail.com';
-
-  static String password = 'admin123';
+  AccountData({
+    required this.email,
+    required this.password,
+    required this.username,
+  });
 }
+
+// Data akun yang sedang terdaftar.
+// Untuk sementara disimpan selama aplikasi berjalan.
+AccountData accountdata = AccountData(
+  email: '',
+  password: '',
+  username: '',
+);

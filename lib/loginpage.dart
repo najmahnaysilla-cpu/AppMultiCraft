@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'accountdata.dart';
 import 'daftarpage.dart';
 import 'lupapassword.dart';
 import 'edukasipage.dart';
-
-// ========================================
-// HALAMAN LOGIN
-// ========================================
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,463 +12,305 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
-  // Controller untuk mengambil isi email
   final TextEditingController emailController =
       TextEditingController();
-
-  // Controller untuk mengambil isi password
   final TextEditingController passwordController =
       TextEditingController();
 
-  // Untuk menampilkan / menyembunyikan password
   bool passwordVisible = false;
 
-  // Untuk checkbox "Ingat saya"
-  bool rememberMe = false;
+  static const Color purple = Color(0xFF6757E8);
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFB7C5F4),
-
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-
-              // =================================
-              // HEADER BIRU
-              // =================================
-
-              Container(
-                width: double.infinity,
-
-                padding: const EdgeInsets.fromLTRB(
-                  15,
-                  10,
-                  15,
-                  27,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-
-                decoration: const BoxDecoration(
-                  color: Color(0xFF182BB5),
-
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                ),
-
-                child: Column(
-                  children: [
-
-                    // Tombol kembali
-                    Align(
-                      alignment: Alignment.centerLeft,
-
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 21,
-                          ),
-                        ),
-                      ),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 26,
+                      vertical: 12,
                     ),
-
-                    const SizedBox(height: 18),
-
-                    const Text(
-                      'Selamat Datang!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 23,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    const Text(
-                      'Masuk untuk melanjutkan',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // =================================
-              // FORM LOGIN
-              // =================================
-
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  26,
-                  40,
-                  26,
-                  20,
-                ),
-
-                child: Column(
-                  children: [
-
-                    // =================================
-                    // EMAIL
-                    // =================================
-
-                    _inputBox(
-                      controller: emailController,
-                      hint: 'Email',
-                      icon: Icons.email_outlined,
-                      keyboardType:
-                          TextInputType.emailAddress,
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // =================================
-                    // PASSWORD
-                    // =================================
-
-                    _inputBox(
-                      controller: passwordController,
-                      hint: 'Password',
-                      icon: Icons.lock_outline,
-
-                      // Password disembunyikan
-                      // kalau passwordVisible = false
-                      obscureText: !passwordVisible,
-
-                      // Tombol mata
-                      suffixIcon: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-
-                        child: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              passwordVisible =
-                                  !passwordVisible;
-                            });
-                          },
-
-                          icon: Icon(
-                            passwordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-
-                            color:
-                                const Color(0xFF182BB5),
-
-                            size: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 5),
-
-                    // =================================
-                    // INGAT SAYA + LUPA PASSWORD
-                    // =================================
-
-                    Row(
+                    child: Column(
                       children: [
+                        const Spacer(),
 
-                        // Checkbox
-                        SizedBox(
-                          width: 18,
-                          height: 18,
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 360,
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.stretch,
+                              children: [
+                                const Text(
+                                  'Selamat Datang!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: purple,
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                const Text(
+                                  'Masuk untuk melanjutkan',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: purple,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 18),
 
-                          child: Checkbox(
-                            value: rememberMe,
+                                _inputBox(
+                                  controller: emailController,
+                                  hint: 'Email',
+                                  iconAsset:
+                                      'assets/images/email.png',
+                                  keyboardType:
+                                      TextInputType.emailAddress,
+                                ),
+                                const SizedBox(height: 10),
 
-                            onChanged: (value) {
-                              setState(() {
-                                rememberMe =
-                                    value ?? false;
-                              });
-                            },
+                                _inputBox(
+                                  controller: passwordController,
+                                  hint: 'Kata Sandi',
+                                  iconAsset:
+                                      'assets/images/gembok.png',
+                                  obscureText: !passwordVisible,
+                                  suffixIcon: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      setState(() {
+                                        passwordVisible =
+                                            !passwordVisible;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      passwordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: purple,
+                                      size: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
 
-                            activeColor:
-                                const Color(0xFF182BB5),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LupaPasswordPage(),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Lupa kata sandi?',
+                                      style: TextStyle(
+                                        color: purple,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 13),
 
-                            materialTapTargetSize:
-                                MaterialTapTargetSize
-                                    .shrinkWrap,
-                          ),
-                        ),
-
-                        const SizedBox(width: 3),
-
-                        const Text(
-                          'Ingat saya',
-                          style: TextStyle(
-                            color: Color(0xFF182BB5),
-                            fontSize: 8,
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 38,
+                                  child: ElevatedButton(
+                                    onPressed: _login,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(255, 227, 87, 232),
+                                      foregroundColor: Colors.white,
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Masuk',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
 
                         const Spacer(),
 
-                        // =================================
-                        // LUPA PASSWORD
-                        // =================================
-
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click,
-
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const LupaPasswordPage(),
-                                ),
-                              );
-                            },
-
-                            child: const Text(
-                              'Lupa password?',
-
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Belum punya akun?',
                               style: TextStyle(
-                                color:
-                                    Color(0xFF182BB5),
-                                fontSize: 8,
+                                color: purple,
+                                fontSize: 10,
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 7),
-
-                    // =================================
-                    // TOMBOL MASUK
-                    // =================================
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 37,
-
-                      child: ElevatedButton(
-                        onPressed: _login,
-
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFF182BB5),
-
-                          foregroundColor:
-                              Colors.white,
-
-                          elevation: 2,
-
-                          shape:
-                              RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(11),
-                          ),
-                        ),
-
-                        child: const Text(
-                          'Masuk',
-
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 118),
-
-                    // =================================
-                    // DAFTAR AKUN
-                    // =================================
-
-                    Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
-
-                      children: [
-
-                        const Text(
-                          'Belum punya akun?',
-
-                          style: TextStyle(
-                            color: Color(0xFF182BB5),
-                            fontSize: 8,
-                          ),
-                        ),
-
-                        const SizedBox(width: 2),
-
-                        // Daftar disini
-                        MouseRegion(
-                          cursor:
-                              SystemMouseCursors.click,
-
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const DaftarPage(),
+                            const SizedBox(width: 3),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const DaftarPage(),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Daftar disini!',
+                                style: TextStyle(
+                                  color: purple,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              );
-                            },
-
-                            child: const Text(
-                              'Daftar disini!',
-
-                              style: TextStyle(
-                                color:
-                                    Color(0xFF182BB5),
-                                fontSize: 8,
-                                fontWeight:
-                                    FontWeight.bold,
                               ),
                             ),
-                          ),
+                          ],
                         ),
+                        const SizedBox(height: 8),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
-
-  // ========================================
-  // KOTAK INPUT
-  // ========================================
 
   Widget _inputBox({
     required TextEditingController controller,
     required String hint,
-    required IconData icon,
-
+    required String iconAsset,
     bool obscureText = false,
-
     TextInputType? keyboardType,
-
     Widget? suffixIcon,
   }) {
-    return TextField(
-      controller: controller,
-
-      obscureText: obscureText,
-
-      keyboardType: keyboardType,
-
-      style: const TextStyle(
-        color: Color(0xFF182BB5),
-        fontSize: 10,
-        fontWeight: FontWeight.bold,
-      ),
-
-      decoration: InputDecoration(
-        filled: true,
-
-        fillColor: Colors.white,
-
-        hintText: hint,
-
-        hintStyle: const TextStyle(
-          color: Color(0xFF182BB5),
-          fontSize: 10,
+    return SizedBox(
+      height: 38,
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: const TextStyle(
+          color: Color.fromARGB(255, 223, 122, 189),
+          fontSize: 8,
           fontWeight: FontWeight.bold,
         ),
-
-        prefixIcon: Icon(
-          icon,
-          color: const Color(0xFF182BB5),
-          size: 15,
-        ),
-
-        suffixIcon: suffixIcon,
-
-        border: OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(11),
-
-          borderSide: BorderSide.none,
-        ),
-
-        contentPadding:
-            const EdgeInsets.symmetric(
-          vertical: 11,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: purple,
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(11),
+            child: Image.asset(
+              iconAsset,
+              width: 14,
+              height: 14,
+              fit: BoxFit.contain,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 38,
+            minHeight: 38,
+          ),
+          suffixIcon: suffixIcon,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 0,
+            horizontal: 8,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(
+              color: purple,
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(
+              color: purple,
+              width: 1.8,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  // ========================================
-  // FUNGSI LOGIN
-  // ========================================
-
   void _login() {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
 
-    // Mengecek email dan password
-    if (emailController.text.trim() ==
-            accountdata.email &&
-        passwordController.text ==
-            accountdata.password) {
+    if (email.isEmpty || password.isEmpty) {
+      _message('Email dan password harus diisi.');
+      return;
+    }
 
-      // Kalau benar,
-      // masuk ke halaman edukasi
-      Navigator.push(
+    if (email == accountdata.email &&
+        password == accountdata.password) {
+      Navigator.pushReplacement(
         context,
-
         MaterialPageRoute(
           builder: (context) => EdukasiPage(
             username: accountdata.username,
+  
           ),
         ),
       );
-
     } else {
-
-      // Kalau salah,
-      // tampilkan pesan
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Email atau password salah.',
-          ),
-        ),
-      );
+      _message('Email atau password salah.');
     }
+  }
+
+  void _message(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }

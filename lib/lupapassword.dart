@@ -1,27 +1,21 @@
 import 'package:flutter/material.dart';
-import 'accountdata.dart';
-
-// ========================================
-// HALAMAN LUPA PASSWORD
-// ========================================
 
 class LupaPasswordPage extends StatefulWidget {
   const LupaPasswordPage({super.key});
 
   @override
-  State<LupaPasswordPage> createState() =>
-      _LupaPasswordPageState();
+  State<LupaPasswordPage> createState() => _LupaPasswordPageState();
 }
 
-class _LupaPasswordPageState
-    extends State<LupaPasswordPage> {
+class _LupaPasswordPageState extends State<LupaPasswordPage> {
+  final TextEditingController emailController = TextEditingController();
 
-  // Controller untuk mengambil email yang diketik
-  final TextEditingController emailController =
-      TextEditingController();
+  // 1 = Lupa1
+  // 2 = Lupa2
+  // 3 = Lupa3
+  int currentStep = 1;
 
-  // Menentukan apakah pesan berhasil sudah muncul
-  bool emailSent = false;
+  final Color purple = const Color(0xFF6757E8);
 
   @override
   void dispose() {
@@ -29,266 +23,255 @@ class _LupaPasswordPageState
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void _kirimEmail() {
+    if (currentStep == 1) {
+      setState(() {
+        currentStep = 2;
+      });
+      return;
+    }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF182BB5),
+    if (currentStep == 2) {
+      final email = emailController.text.trim();
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
+      if (email.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Masukkan email terlebih dahulu.'),
+          ),
+        );
+        return;
+      }
 
-              // =================================
-              // TOMBOL KEMBALI
-              // =================================
+      final emailParts = email.split('@');
+      if (emailParts.length != 2 ||
+          emailParts[0].isEmpty ||
+          !emailParts[1].contains('.') ||
+          emailParts[1].startsWith('.') ||
+          emailParts[1].endsWith('.')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Masukkan alamat email yang valid.'),
+          ),
+        );
+        return;
+      }
 
-              Align(
-                alignment: Alignment.centerLeft,
+      // Tampilan simulasi berhasil mengirim email.
+      setState(() {
+        currentStep = 3;
+      });
+    }
+  }
 
-                child: IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 21,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 72),
-
-              // =================================
-              // JUDUL
-              // =================================
-
-              const Text(
-                'Lupa Password?',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 3),
-
-              const Text(
-                'Masukkan email untuk reset password',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 22),
-
-              // =================================
-              // PESAN EMAIL BERHASIL
-              // =================================
-
-              if (emailSent)
-                Container(
-                  width: double.infinity,
-
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                  ),
-
-                  padding: const EdgeInsets.all(8),
-
-                  color: const Color(0xFFD6D83F),
-
-                  child: const Text(
-                    'Kami sudah mengirim surel yang berisi '
-                    'tautan untuk mereset kata sandi anda',
-
-                    textAlign: TextAlign.center,
-
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-              if (emailSent)
-                const SizedBox(height: 16),
-
-              // =================================
-              // INPUT EMAIL
-              // =================================
-
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                ),
-
-                child: TextField(
-                  controller: emailController,
-
-                  keyboardType:
-                      TextInputType.emailAddress,
-
-                  style: const TextStyle(
-                    color: Color(0xFF182BB5),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-
-                    hintText: 'Email',
-
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF182BB5),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-
-                    prefixIcon: const Icon(
-                      Icons.email_outlined,
-                      color: Color(0xFF182BB5),
-                      size: 15,
-                    ),
-
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(11),
-
-                      borderSide: BorderSide.none,
-                    ),
-
-                    contentPadding:
-                        const EdgeInsets.symmetric(
-                      vertical: 11,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // =================================
-              // TOMBOL KIRIM
-              // =================================
-
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                ),
-
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 37,
-
-                  child: ElevatedButton(
-                    onPressed: _sendEmail,
-
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: emailSent
-                          ? const Color(0xFFD6D83F)
-                          : const Color(0xFFB7C5F4),
-
-                      foregroundColor:
-                          const Color(0xFF182BB5),
-
-                      elevation: 0,
-
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(11),
-                      ),
-                    ),
-
-                    child: const Text(
-                      'Kirim',
-
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // =================================
-              // KEMBALI KE LOGIN
-              // =================================
-
-              if (emailSent)
-                const SizedBox(height: 15),
-
-              if (emailSent)
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-
-                  child: const Text(
-                    '< Kembali ke halaman login',
-
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-            ],
+  Widget _emailField() {
+    return SizedBox(
+      height: 48,
+      child: TextField(
+        controller: emailController,
+        keyboardType: TextInputType.emailAddress,
+        style: const TextStyle(
+          color: Color(0xFF6757E8),
+          fontSize: 13,
+        ),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          hintText: currentStep == 2 ? 'Masukkan Email' : 'Email',
+          hintStyle: const TextStyle(
+            color: Color(0xFF9690B2),
+            fontSize: 13,
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(13),
+            child: Image.asset(
+              'assets/images/email.png',
+              width: 20,
+              height: 20,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  Icons.email_outlined,
+                  size: 20,
+                  color: purple,
+                );
+              },
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 46,
+            minHeight: 48,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 10,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: purple,
+              width: 1.2,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: purple,
+              width: 1.6,
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ========================================
-  // FUNGSI KIRIM EMAIL
-  // ========================================
-
-  void _sendEmail() {
-
-    // Kalau email masih kosong
-    if (emailController.text.trim().isEmpty) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Masukkan email terlebih dahulu.',
+  Widget _formContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Lupa kata sandi?',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: purple,
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
           ),
         ),
-      );
 
-      return;
-    }
+        const SizedBox(height: 9),
 
-    // Mengecek apakah email terdaftar
-    if (emailController.text.trim() !=
-        accountdata.email) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Email belum terdaftar.',
+        const Text(
+          'Masukkan email untuk reset kata sandi',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF9690B2),
+            fontSize: 12,
           ),
         ),
-      );
 
-      return;
-    }
+        const SizedBox(height: 28),
 
-    // Kalau email benar
-    setState(() {
-      emailSent = true;
-    });
+        if (currentStep == 3) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF8BC34A),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              'Kami sudah mengirim surat yang berisi tautan '
+              'untuk mereset kata sandi.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        _emailField(),
+
+        const SizedBox(height: 16),
+
+        SizedBox(
+          height: 48,
+          child: ElevatedButton(
+            onPressed: currentStep == 3 ? null : _kirimEmail,
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  currentStep == 3
+                      ? const Color(0xFFA89CF0)
+                      : purple,
+              disabledBackgroundColor: const Color(0xFFA89CF0),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              currentStep == 3 ? 'Terkirim' : 'Kirim',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+
+        if (currentStep == 3) ...[
+          const SizedBox(height: 18),
+          GestureDetector(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: Text(
+              '← Kembali ke halaman login',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: purple,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9F8FF),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 26,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      children: [
+                        const Spacer(),
+
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 360,
+                            ),
+                            child: _formContent(),
+                          ),
+                        ),
+
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

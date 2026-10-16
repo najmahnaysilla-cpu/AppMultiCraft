@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'accountdata.dart';
 
-// ========================================
-// HALAMAN DAFTAR AKUN
-// ========================================
-
 class DaftarPage extends StatefulWidget {
   const DaftarPage({super.key});
 
@@ -13,396 +9,349 @@ class DaftarPage extends StatefulWidget {
 }
 
 class _DaftarPageState extends State<DaftarPage> {
-
-  // Controller untuk mengambil data dari setiap input
   final TextEditingController emailController =
       TextEditingController();
-
   final TextEditingController usernameController =
       TextEditingController();
-
   final TextEditingController passwordController =
       TextEditingController();
 
-  // Untuk menampilkan / menyembunyikan password
   bool passwordVisible = false;
+  bool agreeTerms = false;
 
-  // Untuk checkbox persetujuan
-  bool agree = false;
+  static const Color purple = Color(0xFF6757E8);
 
   @override
   void dispose() {
     emailController.dispose();
     usernameController.dispose();
     passwordController.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFB7C5F4),
-
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-
-              // =================================
-              // HEADER
-              // =================================
-
-              Container(
-                width: double.infinity,
-
-                padding: const EdgeInsets.fromLTRB(
-                  15,
-                  10,
-                  15,
-                  32,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-
-                decoration: const BoxDecoration(
-                  color: Color(0xFF182BB5),
-
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                ),
-
-                child: Column(
-                  children: [
-
-                    // Tombol kembali
-                    Align(
-                      alignment: Alignment.centerLeft,
-
-                      child: IconButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 21,
-                        ),
-                      ),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 26,
+                      vertical: 12,
                     ),
-
-                    const SizedBox(height: 13),
-
-                    const Text(
-                      'Daftar Akun',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 23,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // =================================
-              // FORM DAFTAR
-              // =================================
-
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  26,
-                  32,
-                  26,
-                  20,
-                ),
-
-                child: Column(
-                  children: [
-
-                    // EMAIL
-                    _inputBox(
-                      controller: emailController,
-                      hint: 'Email',
-                      icon: Icons.email_outlined,
-                      keyboardType:
-                          TextInputType.emailAddress,
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // USERNAME
-                    _inputBox(
-                      controller: usernameController,
-                      hint: 'Username',
-                      icon: Icons.person,
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // PASSWORD
-                    _inputBox(
-                      controller: passwordController,
-                      hint: 'Password',
-                      icon: Icons.lock_outline,
-
-                      obscureText: !passwordVisible,
-
-                      suffixIcon: IconButton(
-                        onPressed: () {
-
-                          setState(() {
-                            passwordVisible =
-                                !passwordVisible;
-                          });
-                        },
-
-                        icon: Icon(
-                          passwordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-
-                          color:
-                              const Color(0xFF182BB5),
-
-                          size: 15,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // =================================
-                    // PERSETUJUAN
-                    // =================================
-
-                    Row(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-
+                    child: Column(
                       children: [
+                        const Spacer(),
 
-                        SizedBox(
-                          width: 18,
-                          height: 18,
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 360,
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.stretch,
+                              children: [
+                                const Text(
+                                  'Daftar Akun',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: purple,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Buat akun untuk mulai menggunakan aplikasi',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: purple,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 18),
 
-                          child: Checkbox(
-                            value: agree,
+                                _inputBox(
+                                  controller: emailController,
+                                  hint: 'Email',
+                                  iconAsset:
+                                      'assets/images/email.png',
+                                  keyboardType:
+                                      TextInputType.emailAddress,
+                                ),
+                                const SizedBox(height: 10),
 
-                            onChanged: (value) {
+                                _inputBox(
+                                  controller: usernameController,
+                                  hint: 'Nama Pengguna',
+                                  iconAsset:
+                                      'assets/images/user.png',
+                                ),
+                                const SizedBox(height: 10),
 
-                              setState(() {
-                                agree =
-                                    value ?? false;
-                              });
-                            },
+                                _inputBox(
+                                  controller: passwordController,
+                                  hint: 'Kata Sandi',
+                                  iconAsset:
+                                      'assets/images/gembok.png',
+                                  obscureText: !passwordVisible,
+                                  suffixIcon: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      setState(() {
+                                        passwordVisible =
+                                            !passwordVisible;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      passwordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: purple,
+                                      size: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 7),
 
-                            activeColor:
-                                const Color(0xFF182BB5),
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: Checkbox(
+                                        value: agreeTerms,
+                                        onChanged: (bool? value) {
+                                          setState(() {
+                                            agreeTerms = value ?? false;
+                                          });
+                                        },
+                                        activeColor: purple,
+                                        checkColor: Colors.white,
+                                        side: const BorderSide(
+                                          color: purple,
+                                          width: 1.5,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Expanded(
+                                      child: Text(
+                                        'Saya telah membaca dan menyetujui '
+                                        'Syarat Ketentuan dan Kebijakan Privasi',
+                                        style: TextStyle(
+                                          color: purple,
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
 
-                            materialTapTargetSize:
-                                MaterialTapTargetSize
-                                    .shrinkWrap,
-                          ),
-                        ),
-
-                        const SizedBox(width: 4),
-
-                        const Expanded(
-                          child: Text(
-                            'Saya telah membaca dan menyetujui '
-                            'Syarat Ketentuan & Kebijakan Privasi',
-
-                            style: TextStyle(
-                              color: Color(0xFF182BB5),
-                              fontSize: 7,
-                              height: 1.2,
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 38,
+                                  child: ElevatedButton(
+                                    onPressed: _daftar,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: purple,
+                                      foregroundColor: Colors.white,
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Daftar',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+
+                        const Spacer(),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Sudah punya akun?',
+                              style: TextStyle(
+                                color: purple,
+                                fontSize: 10,
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                'Masuk disini!',
+                                style: TextStyle(
+                                  color: purple,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                       ],
                     ),
-
-                    const SizedBox(height: 10),
-
-                    // =================================
-                    // TOMBOL DAFTAR
-                    // =================================
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 37,
-
-                      child: ElevatedButton(
-                        onPressed: _register,
-
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFF182BB5),
-
-                          elevation: 2,
-
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(11),
-                          ),
-                        ),
-
-                        child: const Text(
-                          'Daftar',
-
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 160),
-
-                    // =================================
-                    // KEMBALI KE LOGIN
-                    // =================================
-
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-
-                      child: const Text(
-                        'Sudah punya akun? Log in',
-
-                        style: TextStyle(
-                          color: Color(0xFF182BB5),
-                          fontSize: 8,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
-
-  // ========================================
-  // KOMPONEN INPUT
-  // ========================================
 
   Widget _inputBox({
     required TextEditingController controller,
     required String hint,
-    required IconData icon,
-
+    required String iconAsset,
     bool obscureText = false,
-
     TextInputType? keyboardType,
-
     Widget? suffixIcon,
   }) {
-
-    return TextField(
-      controller: controller,
-
-      obscureText: obscureText,
-
-      keyboardType: keyboardType,
-
-      style: const TextStyle(
-        color: Color(0xFF182BB5),
-        fontSize: 10,
-        fontWeight: FontWeight.bold,
-      ),
-
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-
-        hintText: hint,
-
-        hintStyle: const TextStyle(
-          color: Color(0xFF182BB5),
-          fontSize: 10,
+    return SizedBox(
+      height: 38,
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: const TextStyle(
+          color: purple,
+          fontSize: 8,
           fontWeight: FontWeight.bold,
         ),
-
-        prefixIcon: Icon(
-          icon,
-          color: const Color(0xFF182BB5),
-          size: 15,
-        ),
-
-        suffixIcon: suffixIcon,
-
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: BorderSide.none,
-        ),
-
-        contentPadding:
-            const EdgeInsets.symmetric(
-          vertical: 11,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: purple,
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(11),
+            child: Image.asset(
+              iconAsset,
+              width: 14,
+              height: 14,
+              fit: BoxFit.contain,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 38,
+            minHeight: 38,
+          ),
+          suffixIcon: suffixIcon,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 0,
+            horizontal: 8,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(
+              color: purple,
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(
+              color: purple,
+              width: 1.8,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  // ========================================
-  // FUNGSI DAFTAR
-  // ========================================
+  void _daftar() {
+    final email = emailController.text.trim();
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
 
-  void _register() {
-
-    // Mengecek apakah semua input sudah diisi
-    if (emailController.text.trim().isEmpty ||
-        usernameController.text.trim().isEmpty ||
-        passwordController.text.isEmpty) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Lengkapi semua data terlebih dahulu.',
-          ),
-        ),
-      );
-
+    if (email.isEmpty ||
+        username.isEmpty ||
+        password.isEmpty) {
+      _message('Semua data harus diisi.');
       return;
     }
 
-    // Mengecek checkbox persetujuan
-    if (!agree) {
+    final emailRegex =
+        RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Centang persetujuan terlebih dahulu.',
-          ),
-        ),
-      );
-
+    if (!emailRegex.hasMatch(email)) {
+      _message('Masukkan email yang valid.');
       return;
     }
 
-    // Menyimpan data akun baru
-    accountdata.email =
-        emailController.text.trim();
+    if (password.length < 6) {
+      _message('Kata sandi minimal 6 karakter.');
+      return;
+    }
 
-    accountdata.username =
-        usernameController.text.trim();
+    if (!agreeTerms) {
+      _message('Centang persetujuan terlebih dahulu.');
+      return;
+    }
 
-    accountdata.password =
-        passwordController.text;
+    accountdata.email = email;
+    accountdata.username = username;
+    accountdata.password = password;
 
-    // Kembali ke halaman login
-    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Akun berhasil dibuat. Silakan masuk.'),
+      ),
+    );
 
-    // Setelah kembali, user bisa login
-    // menggunakan akun yang baru dibuat.
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      Navigator.pop(context);
+    });
+  }
+
+  void _message(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }
