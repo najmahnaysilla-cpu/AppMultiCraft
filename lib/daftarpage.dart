@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'accountdata.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class DaftarPage extends StatefulWidget {
   const DaftarPage({super.key});
@@ -18,6 +19,7 @@ class _DaftarPageState extends State<DaftarPage> {
 
   bool passwordVisible = false;
   bool agreeTerms = false;
+  bool isLoading = false;
 
   static const Color purple = Color(0xFF6757E8);
 
@@ -171,7 +173,7 @@ class _DaftarPageState extends State<DaftarPage> {
                                   width: double.infinity,
                                   height: 38,
                                   child: ElevatedButton(
-                                    onPressed: _daftar,
+                                    onPressed: isLoading ? null : _daftar,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: purple,
                                       foregroundColor: Colors.white,
@@ -181,14 +183,23 @@ class _DaftarPageState extends State<DaftarPage> {
                                             BorderRadius.circular(10),
                                       ),
                                     ),
-                                    child: const Text(
-                                      'Daftar',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                    child: isLoading
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Daftar',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ],
@@ -302,7 +313,7 @@ class _DaftarPageState extends State<DaftarPage> {
     );
   }
 
-  void _daftar() {
+  Future<void> _daftar() async {
     final email = emailController.text.trim();
     final username = usernameController.text.trim();
     final password = passwordController.text;
@@ -332,20 +343,49 @@ class _DaftarPageState extends State<DaftarPage> {
       return;
     }
 
-    accountdata.email = email;
-    accountdata.username = username;
-    accountdata.password = password;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Akun berhasil dibuat. Silakan masuk.'),
-      ),
-    );
-
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (!mounted) return;
-      Navigator.pop(context);
+    setState(() {
+      isLoading = true;
     });
+
+    try {
+      // Mengirim data ke backend PHP menggunakan IP komputer lokal
+      final response = await http.post(
+        Uri.parse('http://192.168.1.9/multicraft/api/register.php'),
+        body: {
+          'username': username,
+          'email': email,
+          'password': password,
+        },
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Disesuaikan dengan key 'success' dari register.php
+        if (data['success'] == true) {
+          _message(data['message']);
+
+          // Kembali ke halaman login setelah berhasil daftar
+          Future.delayed(const Duration(milliseconds: 900), () {
+            if (!mounted) return;
+            Navigator.pop(context);
+          });
+        } else {
+          _message(data['message'] ?? 'Registrasi gagal.');
+        }
+      } else {
+        _message('Terjadi kesalahan pada server.');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      _message('Gagal terhubung ke server: $e');
+    }
   }
 
   void _message(String message) {

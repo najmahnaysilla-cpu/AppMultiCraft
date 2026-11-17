@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'accountdata.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'daftarpage.dart';
 import 'lupapassword.dart';
 import 'edukasipage.dart';
@@ -12,12 +13,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController =
-      TextEditingController();
-  final TextEditingController passwordController =
-      TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   bool passwordVisible = false;
+  bool isLoading = false;
 
   static const Color purple = Color(0xFF6757E8);
 
@@ -51,7 +51,6 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       children: [
                         const Spacer(),
-
                         Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(
@@ -62,48 +61,46 @@ class _LoginPageState extends State<LoginPage> {
                                   CrossAxisAlignment.stretch,
                               children: [
                                 const Text(
-                                  'Selamat Datang!',
+                                  'Masuk',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: purple,
-                                    fontSize: 30,
+                                    fontSize: 28,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 5),
+                                const SizedBox(height: 4),
                                 const Text(
-                                  'Masuk untuk melanjutkan',
+                                  'Masuk ke akun Anda untuk melanjutkan',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: purple,
-                                    fontSize: 13,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 18),
 
+                                // Input Email / Username
                                 _inputBox(
                                   controller: emailController,
-                                  hint: 'Email',
-                                  iconAsset:
-                                      'assets/images/email.png',
-                                  keyboardType:
-                                      TextInputType.emailAddress,
+                                  hint: 'Email atau Nama Pengguna',
+                                  iconAsset: 'assets/images/email.png',
+                                  keyboardType: TextInputType.text,
                                 ),
                                 const SizedBox(height: 10),
 
+                                // Input Password
                                 _inputBox(
                                   controller: passwordController,
                                   hint: 'Kata Sandi',
-                                  iconAsset:
-                                      'assets/images/gembok.png',
+                                  iconAsset: 'assets/images/gembok.png',
                                   obscureText: !passwordVisible,
                                   suffixIcon: IconButton(
                                     padding: EdgeInsets.zero,
                                     onPressed: () {
                                       setState(() {
-                                        passwordVisible =
-                                            !passwordVisible;
+                                        passwordVisible = !passwordVisible;
                                       });
                                     },
                                     icon: Icon(
@@ -115,8 +112,9 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 6),
 
+                                // Lupa Kata Sandi
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: GestureDetector(
@@ -133,21 +131,22 @@ class _LoginPageState extends State<LoginPage> {
                                       'Lupa kata sandi?',
                                       style: TextStyle(
                                         color: purple,
-                                        fontSize: 10,
+                                        fontSize: 9,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 13),
+                                const SizedBox(height: 16),
 
+                                // Tombol Masuk
                                 SizedBox(
                                   width: double.infinity,
                                   height: 38,
                                   child: ElevatedButton(
-                                    onPressed: _login,
+                                    onPressed: isLoading ? null : _login,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color.fromARGB(255, 227, 87, 232),
+                                      backgroundColor: purple,
                                       foregroundColor: Colors.white,
                                       elevation: 2,
                                       shape: RoundedRectangleBorder(
@@ -155,23 +154,32 @@ class _LoginPageState extends State<LoginPage> {
                                             BorderRadius.circular(10),
                                       ),
                                     ),
-                                    child: const Text(
-                                      'Masuk',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                    child: isLoading
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Masuk',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-
                         const Spacer(),
 
+                        // Belum punya akun? Daftar
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -188,8 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const DaftarPage(),
+                                    builder: (context) => const DaftarPage(),
                                   ),
                                 );
                               },
@@ -232,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
         obscureText: obscureText,
         keyboardType: keyboardType,
         style: const TextStyle(
-          color: Color.fromARGB(255, 223, 122, 189),
+          color: purple,
           fontSize: 8,
           fontWeight: FontWeight.bold,
         ),
@@ -282,28 +289,57 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _login() {
-    final email = emailController.text.trim();
+  // Fungsi Login yang terhubung ke PHP backend via IP 192.168.1.9
+  Future<void> _login() async {
+    final emailOrUsername = emailController.text.trim();
     final password = passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      _message('Email dan password harus diisi.');
+    if (emailOrUsername.isEmpty || password.isEmpty) {
+      _message('Email/Username dan password harus diisi.');
       return;
     }
 
-    if (email == accountdata.email &&
-        password == accountdata.password) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EdukasiPage(
-            username: accountdata.username,
-  
-          ),
-        ),
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.1.9/multicraft/api/login.php'),
+        body: {
+          'identifier': emailOrUsername,
+          'password': password,
+        },
       );
-    } else {
-      _message('Email atau password salah.');
+
+      setState(() {
+        isLoading = false;
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['status'] == 'success') {
+          // Diubah dari 'username' ke 'nama' sesuai database dan file login.php
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EdukasiPage(
+                username: data['data']['nama'] ?? 'Pengguna',
+              ),
+            ),
+          );
+        } else {
+          _message(data['message'] ?? 'Email atau password salah.');
+        }
+      } else {
+        _message('Terjadi kesalahan pada server.');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      _message('Gagal terhubung ke server: $e');
     }
   }
 

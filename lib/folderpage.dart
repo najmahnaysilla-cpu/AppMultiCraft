@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'jadwalpage.dart';
 import 'catatanpage.dart';
 import 'edukasipage.dart';
 
 class FolderPage extends StatefulWidget {
   final String username;
-  final List<Map<String, dynamic>> projects; // Menerima data proyek secara dinamis
+  final List projects;
 
   const FolderPage({
     super.key,
@@ -21,15 +23,54 @@ class _FolderPageState extends State<FolderPage> {
   static const Color purple = Color(0xFF6757E8);
   static const Color lightPurple = Color(0xFFE1DCFF);
 
-  int selectedNav = 4; // Indeks 4 untuk menu Folder/Proyek agar ikonnya menyala putih
+  int selectedNav = 4;
+  List<dynamic> serverProjects = [];
+  bool isLoading = true;
 
-  final List<Map<String, String>> navItems = const [
+  final List navItems = const [
     {'name': 'dashboard', 'label': 'Beranda'},
     {'name': 'jadwal', 'label': 'Jadwal'},
     {'name': 'buku', 'label': 'Edukasi'},
     {'name': 'catatan', 'label': 'Catatan'},
     {'name': 'folder', 'label': 'Proyek'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    serverProjects = widget.projects; 
+    _fetchProjectsFromDatabase(); 
+  }
+
+  Future<void> _fetchProjectsFromDatabase() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.9/multicraft/api/get_projects.php'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          setState(() {
+            serverProjects = data['data'];
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   String assetPath(String name) => 'assets/images/$name.png';
 
@@ -109,7 +150,7 @@ class _FolderPageState extends State<FolderPage> {
 
   @override
   Widget build(BuildContext context) {
-    int totalFilesCount = widget.projects.length;
+    int totalFilesCount = serverProjects.length;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -216,109 +257,115 @@ class _FolderPageState extends State<FolderPage> {
 
                     const SizedBox(height: 14),
 
-                    // GRID DAFTAR 2 KOLOM MENGIKUTI DATA PROYEK
-                    if (widget.projects.isNotEmpty)
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: widget.projects.length,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 1.45,
-                        ),
-                        itemBuilder: (context, index) {
-                          final project = widget.projects[index];
-                          return Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: shape(
-                              color: Colors.white,
-                              radius: 10,
-                              border: Border.all(color: Colors.grey.shade300),
+                    // GRID DAFTAR 2 KOLOM DARI DATABASE
+                    isLoading
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(40),
+                              child: CircularProgressIndicator(color: purple),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.insert_drive_file, size: 14, color: Colors.redAccent),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        project['title'] ?? 'Berkas Proyek',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                          )
+                        : serverProjects.isNotEmpty
+                            ? GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: serverProjects.length,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 1.45,
                                 ),
-                                Text(
-                                  'Proyek: ${project['type']}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.black54,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        project['status'] ?? 'Pra Produksi',
-                                        style: const TextStyle(
-                                          fontSize: 8,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                itemBuilder: (context, index) {
+                                  final project = serverProjects[index];
+                                  return Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: shape(
+                                      color: Colors.white,
+                                      radius: 10,
+                                      border: Border.all(color: Colors.grey.shade300),
                                     ),
-                                    GestureDetector(
-                                      onTap: () => showMessage('Mengunduh berkas...'),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                        decoration: shape(color: purple, radius: 6),
-                                        child: const Text(
-                                          'Unduh',
-                                          style: TextStyle(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.insert_drive_file, size: 14, color: Colors.redAccent),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                project['title'] ?? 'Berkas Proyek',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(
+                                          'Proyek: ${project['type']}',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
                                             fontSize: 9,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black54,
+                                            height: 1.2,
                                           ),
                                         ),
-                                      ),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                project['status'] ?? 'Pra Produksi',
+                                                style: const TextStyle(
+                                                  fontSize: 8,
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            GestureDetector(
+                                              onTap: () => showMessage('Mengunduh berkas...'),
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                                decoration: shape(color: purple, radius: 6),
+                                                child: const Text(
+                                                  'Unduh',
+                                                  style: TextStyle(
+                                                    fontSize: 9,
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  );
+                                },
+                              )
+                            : const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(40),
+                                  child: Text(
+                                    'Belum ada berkas atau proyek yang ditambahkan.',
+                                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                                  ),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                      )
-                    else
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(40),
-                          child: Text(
-                            'Belum ada berkas atau proyek yang ditambahkan.',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ),
-                      ),
+                   ),
                   ],
                 ),
               ),
@@ -354,7 +401,14 @@ class _FolderPageState extends State<FolderPage> {
                             ),
                           );
                         } else if (index == 2) {
-                          showMessage('Menu Edukasi');
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EdukasiPage(
+                                username: widget.username,
+                              ),
+                            ),
+                          );
                         } else if (index == 3) {
                           Navigator.pushReplacement(
                             context,

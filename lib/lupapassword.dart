@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Diperbaiki huruf kecil 'import'
 
 class LupaPasswordPage extends StatefulWidget {
   const LupaPasswordPage({super.key});
@@ -10,9 +10,8 @@ class LupaPasswordPage extends StatefulWidget {
 class _LupaPasswordPageState extends State<LupaPasswordPage> {
   final TextEditingController emailController = TextEditingController();
 
-  // 1 = Lupa1
-  // 2 = Lupa2
-  // 3 = Lupa3
+  // 1 = Input email awal / Proses kirim
+  // 3 = Status terkirim
   int currentStep = 1;
 
   final Color purple = const Color(0xFF6757E8);
@@ -24,44 +23,31 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
   }
 
   void _kirimEmail() {
-    if (currentStep == 1) {
-      setState(() {
-        currentStep = 2;
-      });
+    final email = emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Masukkan email terlebih dahulu.'),
+        ),
+      );
       return;
     }
 
-    if (currentStep == 2) {
-      final email = emailController.text.trim();
-
-      if (email.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Masukkan email terlebih dahulu.'),
-          ),
-        );
-        return;
-      }
-
-      final emailParts = email.split('@');
-      if (emailParts.length != 2 ||
-          emailParts[0].isEmpty ||
-          !emailParts[1].contains('.') ||
-          emailParts[1].startsWith('.') ||
-          emailParts[1].endsWith('.')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Masukkan alamat email yang valid.'),
-          ),
-        );
-        return;
-      }
-
-      // Tampilan simulasi berhasil mengirim email.
-      setState(() {
-        currentStep = 3;
-      });
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Masukkan alamat email yang valid.'),
+        ),
+      );
+      return;
     }
+
+    // Simulasi pengiriman berhasil (bisa nanti dihubungkan ke forgot-password.php jika sudah ada)
+    setState(() {
+      currentStep = 3;
+    });
   }
 
   Widget _emailField() {
@@ -70,14 +56,14 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
       child: TextField(
         controller: emailController,
         keyboardType: TextInputType.emailAddress,
-        style: const TextStyle(
-          color: Color(0xFF6757E8),
+        style: TextStyle(
+          color: purple,
           fontSize: 13,
         ),
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
-          hintText: currentStep == 2 ? 'Masukkan Email' : 'Email',
+          hintText: 'Email',
           hintStyle: const TextStyle(
             color: Color(0xFF9690B2),
             fontSize: 13,
@@ -139,9 +125,7 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-
         const SizedBox(height: 9),
-
         const Text(
           'Masukkan email untuk reset kata sandi',
           textAlign: TextAlign.center,
@@ -150,9 +134,7 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
             fontSize: 12,
           ),
         ),
-
         const SizedBox(height: 28),
-
         if (currentStep == 3) ...[
           Container(
             width: double.infinity,
@@ -177,20 +159,16 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
           ),
           const SizedBox(height: 16),
         ],
-
         _emailField(),
-
         const SizedBox(height: 16),
-
         SizedBox(
           height: 48,
           child: ElevatedButton(
             onPressed: currentStep == 3 ? null : _kirimEmail,
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  currentStep == 3
-                      ? const Color(0xFFA89CF0)
-                      : purple,
+              backgroundColor: currentStep == 3
+                  ? const Color(0xFFA89CF0)
+                  : purple,
               disabledBackgroundColor: const Color(0xFFA89CF0),
               foregroundColor: Colors.white,
               elevation: 0,
@@ -207,7 +185,6 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
             ),
           ),
         ),
-
         if (currentStep == 3) ...[
           const SizedBox(height: 18),
           GestureDetector(
@@ -252,7 +229,6 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
                     child: Column(
                       children: [
                         const Spacer(),
-
                         Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(
@@ -261,7 +237,6 @@ class _LupaPasswordPageState extends State<LupaPasswordPage> {
                             child: _formContent(),
                           ),
                         ),
-
                         const Spacer(),
                       ],
                     ),

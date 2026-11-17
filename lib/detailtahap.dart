@@ -1,15 +1,14 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'addsubtugas.dart'; // Menghubungkan ke file addsubtugas.dart
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'addsubtugas.dart'; 
 
-// =====================================================================
-// HALAMAN DETAIL TAHAP: Tempat mencentang tugas, menulis catatan, & unggah berkas
-// =====================================================================
 class DetailTahapPage extends StatefulWidget {
   final String username;
   final String tahapNama;
   final String projectTitle;
-  final List<Map<String, dynamic>> initialTasks;
+  final List initialTasks;
 
   const DetailTahapPage({
     super.key,
@@ -28,7 +27,7 @@ class _DetailTahapPageState extends State<DetailTahapPage> {
   static const Color lightPurple = Color(0xFFE1DCFF);
 
   int selectedNav = 0;
-  final List<Map<String, String>> navItems = const [
+  final List navItems = const [
     {'name': 'dashboard', 'label': 'Beranda'},
     {'name': 'jadwal', 'label': 'Jadwal'},
     {'name': 'buku', 'label': 'Edukasi'},
@@ -36,13 +35,20 @@ class _DetailTahapPageState extends State<DetailTahapPage> {
     {'name': 'folder', 'label': 'Proyek'},
   ];
 
-  late List<Map<String, dynamic>> tasks;
+  late List tasks;
   final TextEditingController catatanController = TextEditingController();
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     tasks = List.from(widget.initialTasks);
+  }
+
+  @override
+  void dispose() {
+    catatanController.dispose();
+    super.dispose();
   }
 
   String assetPath(String name) => 'assets/images/$name.png';
@@ -99,17 +105,64 @@ class _DetailTahapPageState extends State<DetailTahapPage> {
     );
   }
 
-  // Membuka kotak dialog formulir dari file addsubtugas.dart (Nama kelas disesuaikan jadi AddTaskDialog)
+  // Membuka kotak dialog formulir sub-tugas baru
   void showAddTaskDialog() async {
-    final newTask = await showDialog<Map<String, dynamic>>(
+    final newTask = await showDialog(
       context: context,
-      builder: (_) => const AddTaskDialog(),
+      builder: (_) => AddTaskDialog(projectTitle: widget.projectTitle),
     );
 
     if (newTask != null) {
       setState(() {
         tasks.add(newTask);
       });
+    }
+  }
+
+  // Fungsi untuk menyimpan catatan ke database PHP dan keluar halaman
+  Future<void> _simpanDanKeluar() async {
+    final catatan = catatanController.text.trim();
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.1.9/multicraft/api/save_notes.php'),
+        body: {
+          'project_title': widget.projectTitle,
+          'tahap_nama': widget.tahapNama,
+          'catatan': catatan,
+        },
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          if (!mounted) return;
+          Navigator.pop(context, tasks);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Gagal menyimpan catatan.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Terjadi kesalahan pada server.')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      // Jika gagal koneksi server, tetap izinkan keluar membawa data tugas
+      if (!mounted) return;
+      Navigator.pop(context, tasks);
     }
   }
 
@@ -253,17 +306,17 @@ class _DetailTahapPageState extends State<DetailTahapPage> {
                                   ),
                                   Expanded(
                                     child: Text(
-                                      task['title'],
+                                      task['title'] ?? '',
                                       style: const TextStyle(fontSize: 12, decoration: TextDecoration.none),
                                     ),
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(4)),
-                                    child: Text('PJ : ${task['pj']}', style: const TextStyle(fontSize: 9)),
+                                    child: Text('PJ : ${task['pj'] ?? '-'}', style: const TextStyle(fontSize: 9)),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(task['date'], style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                  Text(task['date'] ?? '-', style: const TextStyle(fontSize: 9, color: Colors.grey)),
                                 ],
                               ),
                             )),
@@ -322,8 +375,14 @@ class _DetailTahapPageState extends State<DetailTahapPage> {
                               backgroundColor: Colors.black, foregroundColor: Colors.white, elevation: 0,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
-                            onPressed: () => Navigator.pop(context, tasks),
-                            child: const Text('Selesai', style: TextStyle(fontSize: 11)),
+                            onPressed: isLoading ? null : _simpanDanKeluar,
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text('Selesai', style: TextStyle(fontSize: 11)),
                           ),
                         ),
                       ),

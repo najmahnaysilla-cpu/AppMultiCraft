@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+// TODO: Impor file halaman login kamu di sini, contoh:
+// import 'loginpage.dart';
 
-// [KODE DIALOG KELUAR]: Kotak pop-up konfirmasi saat user menekan tombol keluar/logout
 class KeluarDialog extends StatelessWidget {
   const KeluarDialog({super.key});
 
@@ -17,29 +18,70 @@ class KeluarDialog extends StatelessWidget {
           children: [
             const Icon(Icons.exit_to_app, size: 40, color: purple),
             const SizedBox(height: 10),
-            const Text('Yakin Ingin Keluar?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const Text(
+              'Yakin Ingin Keluar?',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
             const SizedBox(height: 5),
-            const Text('Kamu akan keluar dari MultiCraft pastikan semua data sudah tersimpan.', textAlign: TextAlign.center, style: TextStyle(fontSize: 9, color: Colors.grey)),
+            const Text(
+              'Kamu akan keluar dari MultiCraft pastikan semua data sudah tersimpan.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 9, color: Colors.grey),
+            ),
             const SizedBox(height: 20),
-            // Tombol "Ya, keluar" untuk kembali ke halaman awal/login
+            
+            // Tombol "Ya, keluar" -> Mengarahkan langsung ke halaman Login dan membersihkan riwayat halaman
             SizedBox(
               width: double.infinity,
               height: 38,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: purple, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-                child: const Text('Ya, keluar', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  // Ganti 'Scaffold()' di bawah ini dengan nama kelas halaman login kamu, misal: LoginPage()
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Scaffold()), // <-- Ubah ke LoginPage()
+                    (route) => false,
+                  );
+                },
+                child: const Text(
+                  'Ya, keluar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            // Tombol "Tidak" untuk menutup pop-up dan batal keluar
+            
+            // Tombol "Tidak" untuk menutup pop-up
             SizedBox(
               width: double.infinity,
               height: 38,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE8E4FF), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE8E4FF),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Tidak', style: TextStyle(color: Colors.black87, fontSize: 11, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Tidak',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],

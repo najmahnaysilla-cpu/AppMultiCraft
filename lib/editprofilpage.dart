@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-// [KODE HALAMAN EDIT PROFIL]: Tempat user mengubah nama, email, nomor telepon (dikosongkan), bio, dan foto profil
+// [KODE HALAMAN EDIT PROFIL]: Tempat user mengubah nama, email, nomor telepon, bio, dan foto profil
 class EditProfilPage extends StatefulWidget {
   final String username;
   final String email;
@@ -20,11 +22,11 @@ class _EditProfilPageState extends State<EditProfilPage> {
   late TextEditingController nameController;
   late TextEditingController emailController;
   
-  // [KOTAK TELEPON KOSONG]: Sengaja dikosongkan agar user bisa mengetik nomor sendiri
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController bioController = TextEditingController();
 
   String selectedPhotoOption = ''; // Menyimpan status pilihan menu foto
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -42,7 +44,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
     super.dispose();
   }
 
-  // [RUMUS KOTAK]: Membuat sudut melengkung dan bayangan
   BoxDecoration shape({Color color = Colors.white, double radius = 12, Border? border}) {
     return BoxDecoration(
       color: color,
@@ -87,8 +88,9 @@ class _EditProfilPageState extends State<EditProfilPage> {
                       setDialogState(() => selectedPhotoOption = 'Ambil Foto');
                     }),
                     const SizedBox(height: 8),
+                    // DIPERBAIKI: Mengubah '==' menjadi '=' agar state-nya berubah dengan benar
                     optionButton('Dari Perangkat', selectedPhotoOption == 'Dari Perangkat', () {
-                      setDialogState(() => selectedPhotoOption == 'Dari Perangkat');
+                      setDialogState(() => selectedPhotoOption = 'Dari Perangkat');
                     }),
                     const SizedBox(height: 8),
                     optionButton('Hapus Foto', selectedPhotoOption == 'Hapus Foto', () {
@@ -104,7 +106,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
     );
   }
 
-  // [TOMBOL OPSI FOTO]: Tombol pilihan dengan efek warna hijau saat dipilih
   Widget optionButton(String text, bool isSelected, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -128,6 +129,67 @@ class _EditProfilPageState extends State<EditProfilPage> {
     );
   }
 
+  // [FUNGSI SIMPAN PERUBAHAN KE DATABASE PHP]
+  Future<void> _updateProfile() async {
+    final newName = nameController.text.trim();
+    final newEmail = emailController.text.trim();
+    final phone = phoneController.text.trim();
+    final bio = bioController.text.trim();
+
+    if (newName.isEmpty || newEmail.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama dan Email wajib diisi!')),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.1.9/multicraft/api/update_profile.php'),
+        body: {
+          'old_email': widget.email, // Menggunakan email lama sebagai acuan pencarian di database
+          'new_name': newName,
+          'new_email': newEmail,
+          'phone': phone,
+          'bio': bio,
+        },
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'])),
+          );
+          Navigator.pop(context, newName); // Mengembalikan nama baru ke halaman sebelumnya
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Gagal memperbarui profil.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Terjadi kesalahan pada server.')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal terhubung ke server: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,7 +197,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // [HEADER EDIT PROFIL]: Tombol kembali dan judul halaman
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
@@ -170,12 +231,10 @@ class _EditProfilPageState extends State<EditProfilPage> {
                 ],
               ),
             ),
-            // [KOTAK INPUT FORMULIR]: Kolom teks untuk mengubah data diri
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // Kartu foto profil yang bisa diklik
                   GestureDetector(
                     onTap: showPhotoOptions,
                     child: Container(
@@ -213,13 +272,20 @@ class _EditProfilPageState extends State<EditProfilPage> {
                   const SizedBox(height: 5),
                   TextField(controller: bioController, style: const TextStyle(fontSize: 11), decoration: inputDec(hint: '(Opsional)')),
                   const SizedBox(height: 24),
-                  // Tombol simpan perubahan
+                  
+                  // Tombol Simpan Perubahan (Terhubung ke PHP)
                   SizedBox(
                     height: 42,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: purple, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Simpan Perubahan', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      onPressed: isLoading ? null : _updateProfile,
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text('Simpan Perubahan', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -231,7 +297,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
     );
   }
 
-  // [DESAIN INPUT TEKS]: Rumus dekorasi kotak teks formulir
   InputDecoration inputDec({String? hint}) {
     return InputDecoration(
       hintText: hint,

@@ -4,11 +4,6 @@ import 'pengaturanpage.dart';
 import 'ujipemahamanpage.dart';
 import 'panduandata.dart';
 
-// =====================================================================
-// KELAS UTAMA: DetailPanduanPage
-// Berfungsi untuk menampilkan halaman detail panduan berdasarkan kategori 
-// yang dipilih (Film, Podcast, atau Animasi).
-// =====================================================================
 class DetailPanduanPage extends StatefulWidget {
   final String username;
   final String categoryTitle;
@@ -24,21 +19,17 @@ class DetailPanduanPage extends StatefulWidget {
 }
 
 class _DetailPanduanPageState extends State<DetailPanduanPage> {
-  // Definisi warna utama aplikasi yang konsisten (Ungu)
   static const Color purple = Color(0xFF6757E8);
   static const Color cardBgColor = Color(0xFFEFEFF7);
 
-  // Fungsi helper untuk memanggil file gambar/ikon dari folder assets
   String assetPath(String name) => 'assets/images/$name.png';
 
-  // Efek bayangan lembut (soft shadow) untuk mempercantik tampilan kartu
   BoxShadow get softShadow => BoxShadow(
         color: Colors.black.withOpacity(0.06),
         blurRadius: 4,
         offset: const Offset(0, 2),
       );
 
-  // Efek bayangan teks (shadow) agar menyerupai referensi desain Figma
   List<Shadow> get textShadow => [
         Shadow(
           color: Colors.black.withOpacity(0.25),
@@ -47,7 +38,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
         ),
       ];
 
-  // Helper dekorasi container (border radius, warna, dan shadow)
   BoxDecoration shape({
     Color color = Colors.white,
     double radius = 12,
@@ -61,7 +51,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
     );
   }
 
-  // Widget helper untuk merender ikon gambar dari assets secara aman (dengan fallback icon)
   Widget assetIcon(String name, {double size = 20, Color? color}) {
     return Image.asset(
       assetPath(name),
@@ -74,7 +63,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
     );
   }
 
-  // Tombol aksi di bagian header atas (Notifikasi & Pengaturan)
   Widget headerButton(String name, VoidCallback onTap) {
     return Container(
       width: 35,
@@ -88,7 +76,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
     );
   }
 
-  // Fungsi universal untuk menampilkan pop-up dialog materi secara interaktif
   void _showPopupDialog(String title, Widget contentWidget) {
     showDialog(
       context: context,
@@ -106,7 +93,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Judul pop-up di bagian atas lengkap dengan efek bayangan teks
                 Center(
                   child: Text(
                     title,
@@ -120,7 +106,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Area konten pop-up yang dapat digulir (scrollable)
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -140,7 +125,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Mengecek apakah kategori saat ini adalah "Animasi" untuk penyesuaian tata letak khusus
     final isAnimasi = widget.categoryTitle.toLowerCase() == 'animasi';
     final cat = widget.categoryTitle.toLowerCase();
 
@@ -149,9 +133,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // ===================================================================
-            // BAGIAN HEADER ATAS: Menampilkan profil pengguna, nama, serta tombol notifikasi & pengaturan
-            // ===================================================================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 18),
@@ -165,7 +146,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
               ),
               child: Row(
                 children: [
-                  // Avatar Profil Pengguna
                   Container(
                     width: 42,
                     height: 42,
@@ -174,7 +154,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                     child: const Icon(Icons.person, color: purple, size: 29),
                   ),
                   const SizedBox(width: 10),
-                  // Nama Pengguna
                   Expanded(
                     child: Text(
                       widget.username,
@@ -187,7 +166,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                       ),
                     ),
                   ),
-                  // Tombol Notifikasi (Bel)
                   headerButton('bel', () {
                     Navigator.push(
                       context,
@@ -200,7 +178,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                     );
                   }),
                   const SizedBox(width: 8),
-                  // Tombol Pengaturan
                   headerButton('pengaturan', () {
                     Navigator.push(
                       context,
@@ -214,15 +191,10 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                 ],
               ),
             ),
-
-            // ===================================================================
-            // BAGIAN KONTEN UTAMA: Daftar menu panduan dan navigasi
-            // ===================================================================
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // Baris Navigasi Kembali & Keterangan Kategori
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -262,23 +234,17 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Column(
                       children: [
-                        // ===================================================
-                        // TATA LETAK KHUSUS KATEGORI ANIMASI (5 Shape Menu)
-                        // ===================================================
                         if (isAnimasi) ...[
-                          // Baris 1: Perbedaan 2D dan 3D & Tahapan Produksi
                           Row(
                             children: [
                               Expanded(
                                 child: _buildMenuCardPortrait(
                                   title: 'Perbedaan 2D dan 3D',
                                   subtitle: 'Mengenal perbedaan visual animasi 2D dan 3D.',
-                                  // Menggunakan kustom ikon berupa teks "2D/3D" di dalam kotak ungu
                                   customIconWidget: Container(
                                     width: 36,
                                     height: 36,
@@ -293,7 +259,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                                     ),
                                   ),
                                   onTap: () {
-                                    // Pop-up Perbedaan 2D & 3D dengan kartu bergambar aset 2d dan 3d
                                     _showPopupDialog(
                                       'Panduan Produksi Animasi',
                                       Column(
@@ -364,7 +329,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // Baris 2: Peran Kru & Peralatan Produksi
                           Row(
                             children: [
                               Expanded(
@@ -373,7 +337,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                                   subtitle: 'Tugas dan tanggung jawab setiap kru.',
                                   assetName: 'grup',
                                   onTap: () {
-                                    // Pop-up Peran Kru Animasi (Menggunakan PageView 4 Slide)
                                     Widget crewContent = StatefulBuilder(
                                       builder: (BuildContext context, StateSetter setStateDialog) {
                                         final PageController pageController = PageController();
@@ -501,7 +464,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                                   subtitle: 'Alat dan software yang dibutuhkan',
                                   assetName: 'film',
                                   onTap: () {
-                                    // Pop-up Peralatan Animasi (2 Slide: 2D & 3D)
                                     Widget peralatanContent = StatefulBuilder(
                                       builder: (BuildContext context, StateSetter setStateDialog) {
                                         final PageController pageController = PageController();
@@ -601,7 +563,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // Baris 3: Panduan Produksi (Ditempatkan di sisi kiri dengan kolom kosong penyeimbang di kanan)
                           Row(
                             children: [
                               Expanded(
@@ -619,9 +580,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                             ],
                           ),
                         ] else ...[
-                          // ===================================================
-                          // TATA LETAK STANDAR KATEGORI FILM & PODCAST (4 Shape Menu)
-                          // ===================================================
                           Row(
                             children: [
                               Expanded(
@@ -797,10 +755,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
                           ),
                         ],
                         const SizedBox(height: 16),
-
-                        // ===================================================
-                        // KARTU BAWAH: UJI PEMAHAMAN
-                        // ===================================================
                         InkWell(
                           onTap: () {
                             Navigator.push(
@@ -852,7 +806,6 @@ class _DetailPanduanPageState extends State<DetailPanduanPage> {
     );
   }
 
-  // Widget helper untuk membangun kartu menu berbentuk potret dengan dukungan kustom ikon teks
   Widget _buildMenuCardPortrait({
     required String title,
     required String subtitle,

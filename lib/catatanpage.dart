@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'edukasipage.dart';
 import 'jadwalpage.dart';
 import 'folderpage.dart';
 
 class CatatanPage extends StatefulWidget {
   final String username;
-  final List<Map<String, dynamic>> projects;
+  final List projects;
 
   const CatatanPage({
     super.key,
@@ -22,14 +24,53 @@ class _CatatanPageState extends State<CatatanPage> {
   static const Color lightPurple = Color(0xFFE1DCFF);
 
   int selectedNav = 3; // Indeks 3 untuk Catatan
+  List<dynamic> serverTasks = [];
+  bool isLoading = true;
 
-  final List<Map<String, String>> navItems = const [
+  final List navItems = const [
     {'name': 'dashboard', 'label': 'Beranda'},
     {'name': 'jadwal', 'label': 'Jadwal'},
     {'name': 'buku', 'label': 'Edukasi'},
     {'name': 'catatan', 'label': 'Catatan'},
     {'name': 'folder', 'label': 'Proyek'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTasks();
+  }
+
+  // Mengambil data catatan/sub-tugas dari server PHP
+  Future<void> _fetchTasks() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.9/multicraft/api/get_tasks.php'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          setState(() {
+            serverTasks = data['data'];
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   String assetPath(String name) => 'assets/images/$name.png';
 
@@ -109,8 +150,6 @@ class _CatatanPageState extends State<CatatanPage> {
 
   @override
   Widget build(BuildContext context) {
-    int totalTasksCount = widget.projects.fold(0, (sum, project) => sum + ((project['tasks'] as int?) ?? 0));
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -159,13 +198,13 @@ class _CatatanPageState extends State<CatatanPage> {
               ),
             ),
 
-            // KONTEN UTAMA SESUAI GAMBAR KANAN
+            // KONTEN UTAMA
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(14, 15, 14, 14),
                 child: Column(
                   children: [
-                    // KOTAK JUDUL: [ DAFTAR TUGAS GLOBAL ] DENGAN BADGE JUMLAH SUB TUGAS
+                    // KOTAK JUDUL: DAFTAR TUGAS GLOBAL
                     Container(
                       padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
                       decoration: shape(color: purple, radius: 12),
@@ -181,7 +220,7 @@ class _CatatanPageState extends State<CatatanPage> {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Seluruh checklist sub-tugas dari semua proyek.',
+                                'Seluruh checklist sub-tugas dari database.',
                                 style: TextStyle(color: Colors.white70, fontSize: 8),
                               ),
                             ],
@@ -190,7 +229,7 @@ class _CatatanPageState extends State<CatatanPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: shape(color: Colors.white, radius: 6),
                             child: Text(
-                              '$totalTasksCount Sub Tugas',
+                              '${serverTasks.length} Sub Tugas',
                               style: const TextStyle(color: purple, fontSize: 9, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -200,74 +239,84 @@ class _CatatanPageState extends State<CatatanPage> {
 
                     const SizedBox(height: 14),
 
-                    // GRID 2 KOLOM MENGIKUTI DATA PROYEK
-                    if (widget.projects.isNotEmpty)
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: widget.projects.length,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 1.85,
-                        ),
-                        itemBuilder: (context, index) {
-                          final project = widget.projects[index];
-                          return Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: shape(
-                              color: Colors.white,
-                              radius: 10,
-                              border: Border.all(color: Colors.grey.shade300),
+                    // LIST / GRID TUGAS DARI DATABASE
+                    isLoading
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(40),
+                              child: CircularProgressIndicator(color: purple),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      project['status'] ?? 'Pra Produksi',
-                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87),
-                                    ),
-                                    Text(
-                                      project['deadline'] ?? '-',
-                                      style: const TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.w500),
-                                    ),
-                                  ],
+                          )
+                        : serverTasks.isNotEmpty
+                            ? GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: serverTasks.length,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 1.7,
                                 ),
-                                Text(
-                                  project['title'] ?? '',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: purple),
-                                ),
-                                Align(
-                                  alignment: Alignment.centerRight,
+                                itemBuilder: (context, index) {
+                                  final task = serverTasks[index];
+                                  return Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: shape(
+                                      color: Colors.white,
+                                      radius: 10,
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                task['project_title'] ?? 'Proyek',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: purple),
+                                              ),
+                                            ),
+                                            Text(
+                                              task['deadline'] ?? '-',
+                                              style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(
+                                          task['task_title'] ?? '',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87),
+                                        ),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            'PJ: ${task['pj'] ?? '-'}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 8, color: Colors.black54, fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              )
+                            : const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(40),
                                   child: Text(
-                                    project['owner'] ?? '',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 9, color: Colors.black54, fontWeight: FontWeight.w600),
+                                    'Belum ada sub-tugas yang tersimpan di database.',
+                                    style: TextStyle(color: Colors.grey, fontSize: 12),
                                   ),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                      )
-                    else
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(40),
-                          child: Text(
-                            'Belum ada proyek atau tugas yang ditambahkan.',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ),
-                      ),
+                              ),
                   ],
                 ),
               ),

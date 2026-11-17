@@ -157,7 +157,7 @@ class _EdukasiPageState extends State<EdukasiPage> {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AddProjectDialog(), // Memanggil file form pop-up
+      builder: (_) => AddProjectPage(username: widget.username), // Memanggil file form pop-up
     );
 
     if (!mounted || result == null) return;

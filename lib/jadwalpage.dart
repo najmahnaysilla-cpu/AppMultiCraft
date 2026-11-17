@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'edukasipage.dart';
 import 'catatanpage.dart';
 import 'folderpage.dart';
 
 class JadwalPage extends StatefulWidget {
   final String username;
-  final List<Map<String, dynamic>> projects;
+  final List projects;
 
   const JadwalPage({
     super.key,
@@ -22,17 +24,50 @@ class _JadwalPageState extends State<JadwalPage> {
   static const Color lightPurple = Color(0xFFE1DCFF);
 
   int selectedNav = 1; // Indeks 1 untuk Jadwal
-
-  // Menyimpan bulan dan tahun yang sedang dilihat di kalender
   late DateTime displayedMonth;
+  List<dynamic> serverProjects = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     displayedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    serverProjects = widget.projects;
+    _fetchProjectsFromDatabase();
   }
 
-  final List<Map<String, String>> navItems = const [
+  // Menarik data proyek terbaru dari backend PHP XAMPP
+  Future<void> _fetchProjectsFromDatabase() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.9/multicraft/api/get_project.php'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          setState(() {
+            serverProjects = data['data'];
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  final List navItems = const [
     {'name': 'dashboard', 'label': 'Beranda'},
     {'name': 'jadwal', 'label': 'Jadwal'},
     {'name': 'buku', 'label': 'Edukasi'},
@@ -124,7 +159,6 @@ class _JadwalPageState extends State<JadwalPage> {
     return months[month - 1];
   }
 
-  // Mengubah string tanggal "d/M/yyyy" menjadi objek DateTime untuk pencocokan kalender
   DateTime? parseDate(String dateStr) {
     try {
       final parts = dateStr.split('/');
@@ -138,11 +172,10 @@ class _JadwalPageState extends State<JadwalPage> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final projectsWithDeadline = widget.projects
+    final projectsWithDeadline = serverProjects
         .where((p) => (p['deadline'] as String? ?? '').isNotEmpty)
         .toList();
 
-    // Mengumpulkan daftar tanggal deadline dari proyek (format DateTime tanpa jam)
     final Set<String> deadlineDateKeys = {};
     for (var p in projectsWithDeadline) {
       final dt = parseDate(p['deadline']);
@@ -151,9 +184,8 @@ class _JadwalPageState extends State<JadwalPage> {
       }
     }
 
-    // Menghitung hari dalam bulan yang sedang ditampilkan
     final daysInMonth = DateUtils.getDaysInMonth(displayedMonth.year, displayedMonth.month);
-    final firstDayOfWeek = DateTime(displayedMonth.year, displayedMonth.month, 1).weekday % 7; // Minggu = 0
+    final firstDayOfWeek = DateTime(displayedMonth.year, displayedMonth.month, 1).weekday % 7;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -203,7 +235,7 @@ class _JadwalPageState extends State<JadwalPage> {
               ),
             ),
 
-            // KONTEN UTAMA
+            // KONTEN UTAMA KALENDER & DEADLINE
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(14, 15, 14, 14),
@@ -279,7 +311,7 @@ class _JadwalPageState extends State<JadwalPage> {
                             ),
                             itemBuilder: (context, index) {
                               if (index < firstDayOfWeek) {
-                                return const SizedBox.shrink(); // Kotak kosong untuk penyesuaian hari
+                                return const SizedBox.shrink();
                               }
                               final day = index - firstDayOfWeek + 1;
                               final cellDate = DateTime(displayedMonth.year, displayedMonth.month, day);
@@ -329,58 +361,66 @@ class _JadwalPageState extends State<JadwalPage> {
 
                     const SizedBox(height: 12),
 
-                    // DAFTAR PROYEK / DEADLINE DINAMIS SESUAI YANG DIINPUT
-                    if (projectsWithDeadline.isNotEmpty)
-                      ...projectsWithDeadline.map((project) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(12),
-                          decoration: shape(color: Colors.white, radius: 10, border: Border.all(color: Colors.grey.shade300)),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      project['title'] ?? '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: purple),
+                    // DAFTAR DEADLINE PROYEK
+                    isLoading
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: CircularProgressIndicator(color: purple),
+                            ),
+                          )
+                        : projectsWithDeadline.isNotEmpty
+                            ? Column(
+                                children: projectsWithDeadline.map((project) {
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: shape(color: Colors.white, radius: 10, border: Border.all(color: Colors.grey.shade300)),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                project['title'] ?? '',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: purple),
+                                              ),
+                                              const SizedBox(height: 3),
+                                              Text(
+                                                '${project['type']} | ${project['owner']}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontSize: 9, color: Colors.grey),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          decoration: shape(color: const Color(0xFFF0F0F0), radius: 8),
+                                          child: Text(
+                                            project['deadline'] ?? '',
+                                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: purple),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      '${project['type']} | ${project['owner']}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 9, color: Colors.grey),
-                                    ),
-                                  ],
+                                  );
+                                }).toList(),
+                              )
+                            : const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(20),
+                                  child: Text(
+                                    'Belum ada tenggat waktu proyek yang ditambahkan.',
+                                    style: TextStyle(color: Colors.grey, fontSize: 11),
+                                  ),
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: shape(color: const Color(0xFFF0F0F0), radius: 8),
-                                child: Text(
-                                  project['deadline'] ?? '',
-                                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: purple),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList()
-                    else
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Text(
-                            'Belum ada tenggat waktu proyek yang ditambahkan.',
-                            style: TextStyle(color: Colors.grey, fontSize: 11),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -415,12 +455,12 @@ class _JadwalPageState extends State<JadwalPage> {
                         } else if (index == 3) {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => CatatanPage(username: widget.username, projects: widget.projects)),
+                            MaterialPageRoute(builder: (_) => CatatanPage(username: widget.username, projects: serverProjects)),
                           );
                         } else if (index == 4) {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => FolderPage(username: widget.username, projects: widget.projects)),
+                            MaterialPageRoute(builder: (_) => FolderPage(username: widget.username, projects: serverProjects)),
                           );
                         }
                       },
